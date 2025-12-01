@@ -63,9 +63,14 @@
 #if OPTIMIZE_POWER_CONSUMPTION_TEMP
 extern uint8_t adc_temp_expired(void);
 extern uint8_t rc32k_cali_flag;
+
 uint8_t temp_trigger = 0;
 uint16_t pre_cali_temp = 0;
 #endif
+
+extern void lock_app_init(void);
+extern void lock_app_process(void);
+
 
 static void stack_integrity_check(void)
 {
@@ -237,6 +242,8 @@ void enter_normal_app_mode(void)
         rwip_schedule();
         //app_fee4_send_ntf(0,512,data_buf);
         oad_updating_user_section_pro();
+			
+			  lock_app_process();
 
         #if OPTIMIZE_POWER_CONSUMPTION_TEMP
         uint32_t adc_temp;
@@ -394,13 +401,18 @@ int main(void)
 
         GLOBAL_INT_START();
 
-        #if(ADC_CALIB)
-        calib_adc();
-        #endif   
+				#if(ADC_CALIB)
+				calib_adc();
+				#endif   
 
-        //add for test adc
-        //check_low_volt_sleep();
-        enter_normal_app_mode();
+				uart_printf(">>> about to call lock_app_init() <<<\r\n");
+				lock_app_init();
+				uart_printf(">>> returned from lock_app_init() <<<\r\n");
+
+				//add for test adc
+				//check_low_volt_sleep();
+				enter_normal_app_mode();
+
     }
     
 }

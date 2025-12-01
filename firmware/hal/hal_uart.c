@@ -2,21 +2,31 @@
 #include "board_config.h"
 #include "debug_log.h"
 
-/*
- * NOTE:
- *  - These are skeletons that you will later wire to the BK3633 UART driver.
- *  - For now they just mark parameters as unused and return OK so code links.
- */
+/* SDK UART driver */
+#include "uart.h"   // from sdk/src/driver/uart.h
 
-static dl_status_t hal_uart_hw_init(hal_uart_port_t port,
-                                    const hal_uart_config_t *cfg)
+static uint8_t s_uart_initialized = 0;
+static uint32_t s_uart_baudrate = 0;
+
+/* Internal helper: only one physical UART in this SDK */
+static dl_status_t hal_uart_hw_init_once(uint32_t baudrate)
 {
-    UNUSED(port);
-    UNUSED(cfg);
-
-    /* TODO: Map HAL_UART_PORT_DEBUG and HAL_UART_PORT_FP to the
-     * actual BK3633 UART instances and configure pins using board_config.h.
-     */
+    if (!s_uart_initialized)
+    {
+        uart_init(baudrate);         // SDK call
+        s_uart_initialized = 1;
+        s_uart_baudrate = baudrate;
+    }
+    else
+    {
+        /* Already initialized – optionally check same baudrate */
+        if (s_uart_baudrate != baudrate)
+        {
+            /* You can decide what to do here; for now, just log and ignore */
+            LOG_WARN("hal_uart: requested baud %u but already init at %u",
+                     (unsigned)baudrate, (unsigned)s_uart_baudrate);
+        }
+    }
 
     return DL_STATUS_OK;
 }
@@ -28,16 +38,20 @@ dl_status_t hal_uart_init(hal_uart_port_t port, const hal_uart_config_t *cfg)
         return DL_STATUS_INVALID_PARAM;
     }
 
-    return hal_uart_hw_init(port, cfg);
+    /* For now, all logical ports share the same physical UART. */
+    return hal_uart_hw_init_once(cfg->baudrate);
 }
 
 dl_status_t hal_uart_send(hal_uart_port_t port, const uint8_t *data, uint16_t len)
 {
-    UNUSED(port);
-    UNUSED(data);
-    UNUSED(len);
+    UNUSED(port);  /* Only one physical UART right now */
 
-    /* TODO: call BK3633 UART send function */
+    if ((data == NULL) || (len == 0))
+    {
+        return DL_STATUS_INVALID_PARAM;
+    }
+
+    uart_send((void *)data, len);    // SDK call
     return DL_STATUS_OK;
 }
 

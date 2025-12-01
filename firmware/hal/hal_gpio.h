@@ -4,14 +4,16 @@
 #include "common.h"
 #include "board_config.h"
 
-/* Direction of a GPIO pin */
+/* Direction of a GPIO pin (our abstraction) */
 typedef enum
 {
     HAL_GPIO_DIR_INPUT = 0,
-    HAL_GPIO_DIR_OUTPUT
+    HAL_GPIO_DIR_OUTPUT,
+    HAL_GPIO_DIR_FLOAT,
+    HAL_GPIO_DIR_ALT_FUNC   /* SC_FUN in SDK */
 } hal_gpio_dir_t;
 
-/* Pull configuration (adjust later to match BK3633 options) */
+/* Pull configuration */
 typedef enum
 {
     HAL_GPIO_PULL_NONE = 0,
@@ -40,11 +42,11 @@ dl_status_t hal_gpio_init(const hal_gpio_t *gpio,
                           hal_gpio_level_t initial_level);
 
 /* Write / read helpers */
-void          hal_gpio_write(const hal_gpio_t *gpio, hal_gpio_level_t level);
+void             hal_gpio_write(const hal_gpio_t *gpio, hal_gpio_level_t level);
 hal_gpio_level_t hal_gpio_read(const hal_gpio_t *gpio);
-void          hal_gpio_toggle(const hal_gpio_t *gpio);
+void             hal_gpio_toggle(const hal_gpio_t *gpio);
 
-/* Convenience macros to build hal_gpio_t from board_config.h defines */
+/* Convenience macro to build a hal_gpio_t from (port, pin) */
 #define HAL_GPIO(port, pin)   ((hal_gpio_t){ (uint8_t)(port), (uint8_t)(pin) })
 
 #endif /* HAL_GPIO_H */
